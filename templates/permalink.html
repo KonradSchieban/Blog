@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Blog</title>
+</head>
+
+<style type="text/css">
+
+    body {
+        font-family: sans-serif;
+        width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+
+    hr {
+        margin: 20px auto;
+    }
+
+    .blog + .blog{
+        margin-top: 20px;
+    }
+
+    .blog-title {
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    .blog-body {
+        font-size: 20px;
+        margin: 0;
+    }
+
+</style>
+
+<body>
+    <a href="/blog"><h1>My Blog</h1></a>
+
+    <hr>
+
+    <div class="blog">
+        <div class="blog-subject">{{ blog_entry.subject }}</div>
+        <pre class="blog-body">{{ blog_entry.text }}</pre>
+    </div>
+
+</body>
+</html>

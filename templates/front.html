@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>/ascii/</title>
+</head>
+
+<style type="text/css">
+
+    body {
+        font-family: sans-serif;
+        width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+
+    hr {
+        margin: 20px auto;
+    }
+
+    .blog + .blog{
+        margin-top: 20px;
+    }
+
+    .blog-title {
+        font-weight: bold;
+        font-size: 20px;
+    }
+
+    .blog-body {
+        font-size: 20px;
+        margin: 0;
+    }
+
+
+    .blog-date {
+        text-align: right;
+    }
+
+    .article-separator {
+        border: none;
+        height: 1px;
+        /* Set the hr color */
+        color: #333; /* old IE */
+        background-color: #333; /* Modern Browsers */
+    }
+
+</style>
+
+<body>
+    <a href="/blog"><h1>My Blog</h1></a>
+
+    <hr>
+
+    {% for blog_entry in blog_entries %}
+    <div class="blog">
+        <div class="blog-subject">{{ blog_entry.subject }}</div>
+        <div class="blog-date">{{ blog_entry.created }}</div>
+
+        <hr class="article_separator">
+        <pre class="blog-body">{{ blog_entry.text }}</pre>
+    </div>
+    {% endfor %}
+
+</body>
+</html>
