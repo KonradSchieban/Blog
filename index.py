@@ -247,7 +247,7 @@ class MainPage(Handler):
     def post(self):  # implementation of delete, like, comment buttons
         str_post_id = self.request.get('post')
         str_like_val = self.request.get('like')  # has the format 1|post_id or -1|post_id
-        str_comment = self.request.get('comment')
+        is_new_comment = self.request.get('is_new_comment')
         str_edit_comment = self.request.get('edit_comment')  # This is the id of the original comment
         str_delete_comment = self.request.get('delete_comment')  # This is the id of the original comment
 
@@ -277,33 +277,45 @@ class MainPage(Handler):
 
                 self.delayed_render_front()
 
-        elif str_comment:  # User comments on post
-            str_user_id = self.read_secure_cookie('user_id')
-            int_user_id = int(str_user_id)
+        elif is_new_comment:  # User comments on post
+            str_comment = self.request.get('comment')
 
-            user = User.by_id(int_user_id)
-            str_username = user.name
+            if not str_comment:  # if comment is empty render error message
+                str_user_id = self.read_secure_cookie('user_id')
+                str_post_id = self.request.get('post_id')
+                self.render_front(str_user_id, str_post_id, "Your Comment may not be empty")
+            else:
+                str_user_id = self.read_secure_cookie('user_id')
+                int_user_id = int(str_user_id)
 
-            str_post_id = self.request.get('post_id')
-            int_post_id = int(str_post_id)
+                user = User.by_id(int_user_id)
+                str_username = user.name
 
-            db_comment = Comment(text=str_comment,
-                                 user_id=int_user_id,
-                                 post_id=int_post_id,
-                                 username=str_username)
-            db_comment.put()
+                str_post_id = self.request.get('post_id')
+                int_post_id = int(str_post_id)
 
-            self.delayed_render_front()
+                db_comment = Comment(text=str_comment,
+                                     user_id=int_user_id,
+                                     post_id=int_post_id,
+                                     username=str_username)
+                db_comment.put()
+
+                self.delayed_render_front()
 
         elif str_edit_comment:
             str_new_comment = self.request.get('comment-text')
 
-            # get original comment and adjust
-            comment = Comment.by_id(int(str_edit_comment))
-            comment.text = str_new_comment
-            comment.put()
+            if not str_new_comment:
+                str_user_id = self.read_secure_cookie('user_id')
+                str_post_id = self.request.get('post_id')
+                self.render_front(str_user_id, str_post_id, "Your Comment may not be empty")
+            else:
+                # get original comment and adjust
+                comment = Comment.by_id(int(str_edit_comment))
+                comment.text = str_new_comment
+                comment.put()
 
-            self.delayed_render_front()
+                self.delayed_render_front()
 
         elif str_delete_comment:
             # get original comment and delete
