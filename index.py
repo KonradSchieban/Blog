@@ -59,10 +59,17 @@ class BlogEntry(db.Model):
     created = db.DateTimeProperty(auto_now=True)
     user_id = db.IntegerProperty(required=True)
     username = db.StringProperty(required=True)
+    likes = db.IntegerProperty(required=True, default=0)
 
     @classmethod
     def by_id(cls, uid):
         return BlogEntry.get_by_id(uid)
+
+
+class Like(db.Model):
+
+    user_id = db.IntegerProperty(required=True)
+    post_id = db.IntegerProperty(required=True)
 
 
 class BlogArticleHandler(Handler):
@@ -245,10 +252,14 @@ class MyBlogPage(Handler):
 
 class MainPage(Handler):
 
-    def render_front(self, str_user_id):
+    def render_front(self, str_user_id, err_post_id="", err_msg=""):
 
         blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
-        self.render('front.html', blog_entries=blog_entries, user_id=str_user_id)
+        self.render('front.html',
+                    blog_entries=blog_entries,
+                    user_id=str_user_id,
+                    err_post_id=err_post_id,
+                    err_msg=err_msg)
 
     def get(self):
         str_user_id = self.read_secure_cookie('user_id')
@@ -259,16 +270,47 @@ class MainPage(Handler):
 
     def post(self):  # implementation of "delete" button
         str_post_id = self.request.get('post')
-        int_post_id = int(str_post_id)
-        blog_entry = BlogEntry.by_id(int_post_id)
-        blog_entry.delete()
+        str_like_val = self.request.get('like')  # has the format 1|post_id or -1|post_id
 
-        str_user_id = self.read_secure_cookie('user_id')
-        if str_user_id:
-            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
-            self.render_front(str_user_id)
-        else:
-            self.redirect('/signup')
+        if str_like_val:  # User likes/dislikes post
+            str_like = str_like_val.split('|')[0]  # +1 for like or -1 for dislike
+            str_post_id = str_like_val.split('|')[1]
+            int_post_id = int(str_post_id)
+
+            # check if user already liked this post
+            str_user_id = self.read_secure_cookie('user_id')
+            like_entries = db.GqlQuery("SELECT * "
+                                       "FROM Like "
+                                       "WHERE user_id=" + str_user_id +
+                                       " AND post_id=" + str_post_id)
+
+            if like_entries.get():  # User already liked/disliked
+                self.render_front(str_user_id, str_post_id, "You already liked this post")
+            else:
+                blog_entry = BlogEntry.by_id(int_post_id)
+                blog_entry.likes += int(str_like)
+                blog_entry.put()
+
+                # Update Like table
+                int_user_id = int(str_user_id)
+                like = Like(post_id=int_post_id, user_id=int_user_id)
+                like.put()
+
+                time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+                self.render_front(str_user_id)
+
+        else:  # User deletes a post
+            int_post_id = int(str_post_id)
+            blog_entry = BlogEntry.by_id(int_post_id)
+            blog_entry.delete()
+
+            str_user_id = self.read_secure_cookie('user_id')
+            if str_user_id:
+                time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+                self.render_front(str_user_id)
+            else:
+                self.redirect('/signup')
+
 
 
 app = webapp2.WSGIApplication([
