@@ -53,11 +53,20 @@
 
     {% for blog_entry in blog_entries %}
     <div class="blog">
+        <div class="blog-username">{{ blog_entry.username }}</div>
         <div class="blog-subject">{{ blog_entry.subject }}</div>
         <div class="blog-date">{{ blog_entry.created }}</div>
 
         <hr class="article_separator">
         <pre class="blog-body">{{ blog_entry.text }}</pre>
+        {% if user_id == blog_entry.user_id|string %}
+        <form action="/blog/NewPost" method="get">
+            <button name="post" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
+        </form>
+        <form method="post">
+            <button name="post" value="{{ blog_entry.key().id() }}" type="submit">Delete</button>
+        </form>
+        {% endif %}
     </div>
     {% endfor %}
 
