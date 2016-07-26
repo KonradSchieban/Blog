@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>/ascii/</title>
+    <title>Blog</title>
 </head>
 
 <style type="text/css">
@@ -99,7 +99,19 @@
 
         {% for comment in comments %}
             {% if comment.post_id == blog_entry.key().id() %}
-            <pre class="blog-comment">{{ comment.text }}</pre>
+                {% if user_id != comment.user_id|string %}
+                    <div class="comment-username">{{ comment.username }}</div>
+                    <pre class="comment-text">{{ comment.text }}</pre>
+                {% endif %}
+
+                {% if user_id == comment.user_id|string %}
+                    <div class="comment-username">{{ comment.username }}</div>
+                    <form method="post">
+                        <textarea name="comment-text">{{ comment.text }}</textarea>
+                        <button name="edit_comment" value="{{ comment.key().id() }}" type="submit">Edit</button>
+                        <button name="delete_comment" value="{{ comment.key().id() }}" type="submit">Delete</button>
+                    </form>
+                {% endif %}
             {% endif %}
         {% endfor %}
 

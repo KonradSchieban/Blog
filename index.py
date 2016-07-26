@@ -10,6 +10,7 @@ from google.appengine.ext import db
 # Own Libraries
 from tools import *
 from User import *
+from db_models import *
 
 # Initialize Jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -45,40 +46,6 @@ class Handler(webapp2.RequestHandler):
 
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
-
-    def delete_db_model(self, db_model):
-        all_entries = db.GqlQuery("SELECT * FROM " + db_model)
-        for entry in all_entries:
-            entry.delete()
-
-
-class BlogEntry(db.Model):
-
-    subject = db.StringProperty(required=True)
-    text = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now=True)
-    user_id = db.IntegerProperty(required=True)
-    username = db.StringProperty(required=True)
-    likes = db.IntegerProperty(required=True, default=0)
-
-    @classmethod
-    def by_id(cls, uid):
-        return BlogEntry.get_by_id(uid)
-
-
-class Comment(db.Model):
-
-    text = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now=True)
-    user_id = db.IntegerProperty(required=True)
-    username = db.StringProperty(required=True)
-    post_id = db.IntegerProperty(required=True)
-
-
-class Like(db.Model):
-
-    user_id = db.IntegerProperty(required=True)
-    post_id = db.IntegerProperty(required=True)
 
 
 class BlogArticleHandler(Handler):
@@ -219,16 +186,6 @@ class WelcomePage(Handler):
             self.redirect('/signup')
 
 
-class DeletePage(Handler):
-    def get(self):
-
-        db_model = self.request.get('model')
-        self.write(db_model)
-        entries = db.GqlQuery("SELECT * FROM " + db_model)
-        for entry in entries:
-            entry.delete()
-
-
 class MyBlogPage(Handler):
 
     def render_my_blog(self, str_user_id):
@@ -272,6 +229,14 @@ class MainPage(Handler):
                     err_msg=err_msg,
                     comments=comments)
 
+    def delayed_render_front(self):
+        str_user_id = self.read_secure_cookie('user_id')
+        if str_user_id:
+            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+            self.render_front(str_user_id)
+        else:
+            self.redirect('/signup')
+
     def get(self):
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
@@ -283,6 +248,8 @@ class MainPage(Handler):
         str_post_id = self.request.get('post')
         str_like_val = self.request.get('like')  # has the format 1|post_id or -1|post_id
         str_comment = self.request.get('comment')
+        str_edit_comment = self.request.get('edit_comment')  # This is the id of the original comment
+        str_delete_comment = self.request.get('delete_comment')  # This is the id of the original comment
 
         if str_like_val:  # User likes/dislikes post
             str_like = str_like_val.split('|')[0]  # +1 for like or -1 for dislike
@@ -308,8 +275,7 @@ class MainPage(Handler):
                 like = Like(post_id=int_post_id, user_id=int_user_id)
                 like.put()
 
-                time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
-                self.render_front(str_user_id)
+                self.delayed_render_front()
 
         elif str_comment:  # User comments on post
             str_user_id = self.read_secure_cookie('user_id')
@@ -327,21 +293,41 @@ class MainPage(Handler):
                                  username=str_username)
             db_comment.put()
 
-            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
-            self.render_front(str_user_id)
+            self.delayed_render_front()
+
+        elif str_edit_comment:
+            str_new_comment = self.request.get('comment-text')
+
+            # get original comment and adjust
+            comment = Comment.by_id(int(str_edit_comment))
+            comment.text = str_new_comment
+            comment.put()
+
+            self.delayed_render_front()
+
+        elif str_delete_comment:
+            # get original comment and delete
+            comment = Comment.by_id(int(str_delete_comment))
+            comment.delete()
+
+            self.delayed_render_front()
 
         else:  # User deletes a post
             int_post_id = int(str_post_id)
             blog_entry = BlogEntry.by_id(int_post_id)
             blog_entry.delete()
 
-            str_user_id = self.read_secure_cookie('user_id')
-            if str_user_id:
-                time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
-                self.render_front(str_user_id)
-            else:
-                self.redirect('/signup')
+            # delete all comments that are associated with post
+            comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id=" + str_post_id)
+            for comment in comments:
+                comment.delete()
 
+            # delete all likes that are associated with post
+            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id=" + str_post_id)
+            for like in likes:
+                like.delete()
+
+            self.delayed_render_front()
 
 
 app = webapp2.WSGIApplication([
@@ -352,8 +338,7 @@ app = webapp2.WSGIApplication([
     ('/signup', SignUpPage),
     ('/welcome', WelcomePage),
     ('/login', LoginPage),
-    ('/logout', LogoutPage),
-    ('/delete', DeletePage)
+    ('/logout', LogoutPage)
 ], debug=True)
 
 
