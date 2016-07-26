@@ -1,5 +1,6 @@
 # Python StdLib
 import os
+import time
 
 # External Libraries
 import jinja2
@@ -10,10 +11,9 @@ from google.appengine.ext import db
 from tools import *
 from User import *
 
+# Initialize Jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
-
-SECRET = 'asdf'
 
 
 class Handler(webapp2.RequestHandler):
@@ -56,8 +56,13 @@ class BlogEntry(db.Model):
 
     subject = db.StringProperty(required=True)
     text = db.TextProperty(required=True)
-    created = db.DateTimeProperty(auto_now_add=True)
+    created = db.DateTimeProperty(auto_now=True)
     user_id = db.IntegerProperty(required=True)
+    username = db.StringProperty(required=True)
+
+    @classmethod
+    def by_id(cls, uid):
+        return BlogEntry.get_by_id(uid)
 
 
 class BlogArticleHandler(Handler):
@@ -78,28 +83,50 @@ class BlogArticleHandler(Handler):
 
 class NewBlogPage(Handler):
 
-    def render_new_post_page(self, subject="", blog="", error=""):
-        self.render('new_post.html', subject=subject, blog=blog, error=error)
+    def render_new_post_page(self, subject="", text="", post_id="", error=""):
+        self.render('new_post.html', subject=subject, text=text, post_id=post_id, error=error)
 
     def get(self):
-        self.render_new_post_page()
+
+        # Check first if user has valid cookie. Otherwise redirect...
+        str_user_id = self.read_secure_cookie('user_id')
+        if not str_user_id:
+            self.redirect('/signup')
+        else:
+            # Check if this an existing post is edited
+            str_post_id = self.request.get('post')
+            if str_post_id:  # edit
+                blog_entry = BlogEntry.get_by_id(int(str_post_id))
+                self.render_new_post_page(subject=blog_entry.subject, text=blog_entry.text, post_id=str_post_id)
+            else:  # new post
+                self.render_new_post_page()
 
     def post(self):
         subject = self.request.get('subject')
         text = self.request.get('text')
+        str_post_id = self.request.get('post_id')  # only nonempty if post is edited
 
-        str_user_id = self.read_secure_cookie('user_id')
+        if subject and text:
 
-        if subject and text and str_user_id:
-
+            # get user object from cookie
+            str_user_id = self.read_secure_cookie('user_id')
             int_user_id = int(str_user_id)
+            user = User.by_id(int_user_id)
 
-            a = BlogEntry(subject=subject, text=text, user_id=int_user_id)
-            a.put()
+            if not str_post_id:  # new creation of blog post
+                a = BlogEntry(subject=subject, text=text, user_id=int_user_id, username=user.name)
+                a.put()
 
-            # Creation of a Permalink
-            link_id = a.key().id()
-            self.redirect('/blog/' + str(link_id))
+                # Creation of a Permalink
+                link_id = a.key().id()
+                self.redirect('/blog/' + str(link_id))
+            else:  # blog post is only updated, not created
+                int_post_id = int(str_post_id)
+                blog_entry = BlogEntry.by_id(int_post_id)
+                blog_entry.text = text  # update existing blog entry with edited value
+                blog_entry.subject = subject  # update existing blog entry with edited value
+                blog_entry.put()
+                self.redirect('/blog/' + str_post_id)
         else:
             error = "We need both a subject and content"
             self.render_new_post_page(subject, text, error)
@@ -192,9 +219,8 @@ class MyBlogPage(Handler):
 
         query = "SELECT * FROM BlogEntry WHERE user_id=" + str_user_id + " ORDER BY created DESC";
         blog_entries = db.GqlQuery(query)
-        #self.write(query)
 
-        self.render('front.html', blog_entries=blog_entries)
+        self.render('front.html', blog_entries=blog_entries, user_id=str_user_id)
 
     def get(self):
         str_user_id = self.read_secure_cookie('user_id')
@@ -203,17 +229,46 @@ class MyBlogPage(Handler):
         else:
             self.redirect('/signup')
 
+    def post(self):  # implementation of "delete" button
+        str_post_id = self.request.get('post')
+        int_post_id = int(str_post_id)
+        blog_entry = BlogEntry.by_id(int_post_id)
+        blog_entry.delete()
+
+        str_user_id = self.read_secure_cookie('user_id')
+        if str_user_id:
+            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+            self.render_my_blog(str_user_id)
+        else:
+            self.redirect('/signup')
+
 
 class MainPage(Handler):
 
-    def render_front(self):
+    def render_front(self, str_user_id):
 
         blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
-
-        self.render('front.html', blog_entries=blog_entries)
+        self.render('front.html', blog_entries=blog_entries, user_id=str_user_id)
 
     def get(self):
-        self.render_front()
+        str_user_id = self.read_secure_cookie('user_id')
+        if str_user_id:
+            self.render_front(str_user_id)
+        else:
+            self.redirect('/signup')
+
+    def post(self):  # implementation of "delete" button
+        str_post_id = self.request.get('post')
+        int_post_id = int(str_post_id)
+        blog_entry = BlogEntry.by_id(int_post_id)
+        blog_entry.delete()
+
+        str_user_id = self.read_secure_cookie('user_id')
+        if str_user_id:
+            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+            self.render_front(str_user_id)
+        else:
+            self.redirect('/signup')
 
 
 app = webapp2.WSGIApplication([
