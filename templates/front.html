@@ -57,8 +57,8 @@
 
     {% for blog_entry in blog_entries %}
     <div class="blog">
-        <div class="blog-username">{{ blog_entry.username }} {{blog_entry.key().id()}}</div>
-        <div class="blog-subject">{{ blog_entry.subject }} {{err_post_id}}</div>
+        <div class="blog-username">{{ blog_entry.username }}</div>
+        <div class="blog-subject">{{ blog_entry.subject }}</div>
         <div class="blog-date">{{ blog_entry.created }}</div>
 
         <hr class="article_separator">
@@ -88,6 +88,20 @@
             {{ err_msg }}
         {% endif %}
          </div>
+
+        {% if user_id != blog_entry.user_id|string %}
+        <form method="post">
+            <textarea name="comment"></textarea>
+            <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
+            <button type="submit">Comment</button>
+        </form>
+        {% endif %}
+
+        {% for comment in comments %}
+            {% if comment.post_id == blog_entry.key().id() %}
+            <pre class="blog-comment">{{ comment.text }}</pre>
+            {% endif %}
+        {% endfor %}
 
     </div>
     {% endfor %}

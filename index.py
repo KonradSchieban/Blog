@@ -66,6 +66,15 @@ class BlogEntry(db.Model):
         return BlogEntry.get_by_id(uid)
 
 
+class Comment(db.Model):
+
+    text = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now=True)
+    user_id = db.IntegerProperty(required=True)
+    username = db.StringProperty(required=True)
+    post_id = db.IntegerProperty(required=True)
+
+
 class Like(db.Model):
 
     user_id = db.IntegerProperty(required=True)
@@ -255,11 +264,13 @@ class MainPage(Handler):
     def render_front(self, str_user_id, err_post_id="", err_msg=""):
 
         blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
+        comments = db.GqlQuery("SELECT * FROM Comment ORDER BY created DESC")
         self.render('front.html',
                     blog_entries=blog_entries,
                     user_id=str_user_id,
                     err_post_id=err_post_id,
-                    err_msg=err_msg)
+                    err_msg=err_msg,
+                    comments=comments)
 
     def get(self):
         str_user_id = self.read_secure_cookie('user_id')
@@ -268,9 +279,10 @@ class MainPage(Handler):
         else:
             self.redirect('/signup')
 
-    def post(self):  # implementation of "delete" button
+    def post(self):  # implementation of delete, like, comment buttons
         str_post_id = self.request.get('post')
         str_like_val = self.request.get('like')  # has the format 1|post_id or -1|post_id
+        str_comment = self.request.get('comment')
 
         if str_like_val:  # User likes/dislikes post
             str_like = str_like_val.split('|')[0]  # +1 for like or -1 for dislike
@@ -298,6 +310,25 @@ class MainPage(Handler):
 
                 time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
                 self.render_front(str_user_id)
+
+        elif str_comment:  # User comments on post
+            str_user_id = self.read_secure_cookie('user_id')
+            int_user_id = int(str_user_id)
+
+            user = User.by_id(int_user_id)
+            str_username = user.name
+
+            str_post_id = self.request.get('post_id')
+            int_post_id = int(str_post_id)
+
+            db_comment = Comment(text=str_comment,
+                                 user_id=int_user_id,
+                                 post_id=int_post_id,
+                                 username=str_username)
+            db_comment.put()
+
+            time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
+            self.render_front(str_user_id)
 
         else:  # User deletes a post
             int_post_id = int(str_post_id)
