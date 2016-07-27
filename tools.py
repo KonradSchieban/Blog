@@ -3,6 +3,7 @@ import re
 
 SECRET = 'hsajdfkhjkasdlghjsdfgmdsngjsdhfg'
 
+
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(SECRET, val).hexdigest())
 

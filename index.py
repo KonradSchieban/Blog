@@ -14,7 +14,8 @@ from db_models import *
 
 # Initialize Jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                               autoescape=True)
 
 
 class Handler(webapp2.RequestHandler):
@@ -66,10 +67,10 @@ class Handler(webapp2.RequestHandler):
 
 
 class BlogArticleHandler(Handler):
-
     def render_new_post(self, subject="", text="", error=""):
         """
-        Render permalink page which is created after a new post has been created
+        Render permalink page which is created after a new post
+        has been created
         """
         path = self.request.path  # returns URL
         blog_id = path[6:]  # returns only the id part of the URL
@@ -79,21 +80,24 @@ class BlogArticleHandler(Handler):
         self.render('permalink.html', blog_entry=b)
 
     def get(self):
-
         self.render_new_post()
 
 
 class NewBlogPage(Handler):
-
     def render_new_post_page(self, subject="", text="", post_id="", error=""):
-        self.render('new_post.html', subject=subject, text=text, post_id=post_id, error=error)
+        self.render('new_post.html',
+                    subject=subject,
+                    text=text,
+                    post_id=post_id,
+                    error=error)
 
     def get(self):
         """
-        Get Method can be called either if user wants to create a new post or wants
-        to edit an existing post from the main blog page. In the latter case, the
-        "post" parameter exists in the request header which contains the id of the
-        blog entry which needs to be edited.
+        Get Method can be called either if user wants to create a new
+        post or wants to edit an existing post from the main blog page.
+        In the latter case, the "post" parameter exists in the request
+        header which contains the id of the blog entry which needs to
+        be edited.
         """
 
         # Check first if user has valid cookie. Otherwise redirect...
@@ -105,13 +109,16 @@ class NewBlogPage(Handler):
             str_post_id = self.request.get('post')
             if str_post_id:  # edit
                 blog_entry = BlogEntry.get_by_id(int(str_post_id))
-                self.render_new_post_page(subject=blog_entry.subject, text=blog_entry.text, post_id=str_post_id)
+                self.render_new_post_page(subject=blog_entry.subject,
+                                          text=blog_entry.text,
+                                          post_id=str_post_id)
             else:  # new post
                 self.render_new_post_page()
 
     def post(self):
         """
-        Post method is called when a new post is created or an existing post is edited.
+        Post method is called when a new post is created or an
+        existing post is edited.
         """
         subject = self.request.get('subject')
         text = self.request.get('text')
@@ -125,7 +132,10 @@ class NewBlogPage(Handler):
             user = User.by_id(int_user_id)
 
             if not str_post_id:  # new creation of blog post
-                a = BlogEntry(subject=subject, text=text, user_id=int_user_id, username=user.name)
+                a = BlogEntry(subject=subject,
+                              text=text,
+                              user_id=int_user_id,
+                              username=user.name)
                 a.put()
 
                 # Creation of a Permalink
@@ -144,7 +154,6 @@ class NewBlogPage(Handler):
 
 
 class SignUpPage(Handler):
-
     def get(self):
         self.render("signup.html")
 
@@ -164,13 +173,15 @@ class SignUpPage(Handler):
                         error_username="Username is empty")
         elif not valid_username(username):
             self.render('signup.html', username=username, email=email,
-                        error_username="Username does not match required specifications")
+                        error_username="Username does not match "
+                                       "required specifications")
         elif not password:
             self.render('signup.html', username=username, email=email,
                         error_password="Password is empty")
         elif not valid_password(password):
             self.render('signup.html', username=username, email=email,
-                        error_password="Password does not match required specifications")
+                        error_password="Password does not match "
+                                       "required specifications")
         elif not password == verify:  # invalid user data
             self.render('signup.html', username=username, email=email,
                         error_password="Passwords do not match")
@@ -214,7 +225,9 @@ class LoginPage(Handler):
             self.render('login.html', error_username=error_username)
         elif not valid_pw(username, password, user.pw_hash):
             error_password = "The password is not correct"
-            self.render('login.html', username=username, error_password=error_password)
+            self.render('login.html',
+                        username=username,
+                        error_password=error_password)
         else:
             self.login(user)  # Sets the cookie with user id
             self.redirect('/blog/welcome')
@@ -231,7 +244,6 @@ class LogoutPage(Handler):
 
 
 class WelcomePage(Handler):
-
     def get(self):
         """
         Render Welcome Page and greet the user.
@@ -248,20 +260,24 @@ class WelcomePage(Handler):
 
 
 class MyBlogPage(Handler):
-
     def render_my_blog(self, str_user_id):
         """
         Renders own blog page with only the posts that this user created
         :param str_user_id: User id as string
         """
-        query = "SELECT * FROM BlogEntry WHERE user_id=" + str_user_id + " ORDER BY created DESC";
+        query = "SELECT * " \
+                "FROM BlogEntry " \
+                "WHERE user_id=" + str_user_id + " ORDER BY created DESC"
         blog_entries = db.GqlQuery(query)
 
-        self.render('front.html', blog_entries=blog_entries, user_id=str_user_id)
+        self.render('front.html',
+                    blog_entries=blog_entries,
+                    user_id=str_user_id)
 
     def get(self):
         """
-        If user id is valid, render myblog page. Otherwise redirect to the signup page
+        If user id is valid, render myblog page.
+        Otherwise redirect to the signup page.
         """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
@@ -271,9 +287,9 @@ class MyBlogPage(Handler):
 
     def post(self):  # implementation of "delete" button
         """
-        Post Method is called when user deletes a post. Not only the blog entry is deleted
-        but also associated comments and likes.
-        Eventually, the page is re-rendered.
+        Post Method is called when user deletes a post.
+        Not only the blog entry is deleted but also associated
+        comments and likes. Eventually, the page is re-rendered.
         """
         str_post_id = self.request.get('post')
         int_post_id = int(str_post_id)
@@ -281,12 +297,16 @@ class MyBlogPage(Handler):
         blog_entry.delete()
 
         # delete all comments that are associated with post
-        comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id=" + str_post_id)
+        comments = db.GqlQuery("SELECT * "
+                               "FROM Comment "
+                               "WHERE post_id=" + str_post_id)
         for comment in comments:
             comment.delete()
 
         # delete all likes that are associated with post
-        likes = db.GqlQuery("SELECT * FROM Like WHERE post_id=" + str_post_id)
+        likes = db.GqlQuery("SELECT * "
+                            "FROM Like "
+                            "WHERE post_id=" + str_post_id)
         for like in likes:
             like.delete()
 
@@ -299,7 +319,6 @@ class MyBlogPage(Handler):
 
 
 class MainPage(Handler):
-
     def render_front(self, str_user_id, err_post_id="", err_msg=""):
         """
         Renders the main blog page
@@ -309,8 +328,12 @@ class MainPage(Handler):
         :param err_msg: error message
         """
 
-        blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
-        comments = db.GqlQuery("SELECT * FROM Comment ORDER BY created DESC")
+        blog_entries = db.GqlQuery("SELECT * "
+                                   "FROM BlogEntry "
+                                   "ORDER BY created DESC")
+        comments = db.GqlQuery("SELECT * "
+                               "FROM Comment "
+                               "ORDER BY created DESC")
 
         self.render('front.html',
                     blog_entries=blog_entries,
@@ -321,10 +344,11 @@ class MainPage(Handler):
 
     def delayed_render_front(self):
         """
-        Calls render_front if user_id is valid after waiting one second.
-        A short delay before rendering the blog is necessary if the datastore has been
-        updated because there is a short inconsistency in the tables after they are
-        updated.
+        Calls render_front if user_id is valid after
+        waiting one second. A short delay before rendering
+        the blog is necessary if the datastore has been
+        updated because there is a short inconsistency in
+        the tables after they are updated.
         """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
@@ -335,7 +359,8 @@ class MainPage(Handler):
 
     def get(self):
         """
-        If user id is valid, render front page. Otherwise redirect to the signup page
+        If user id is valid, render front page.
+        Otherwise redirect to the signup page
         """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
@@ -352,13 +377,14 @@ class MainPage(Handler):
             - delete a comment (if user created the comment)
             - delete a post (if user is not creator of post)
 
-        The function notices which type of user interaction was triggered by checking
-        if the corresponding form variable (see front.html) is not empty. For example,
-        the request parameter like is only non-empty if the user pushed the "like" or
-        "dislike" button.
+        The function notices which type of user interaction was
+        triggered by checking if the corresponding form variable
+        (see front.html) is not empty. For example, the request
+        parameter like is only non-empty if the user pushed the
+        "like" or "dislike" button.
 
-        Each user interaction modifies the existing database tables in an intended way.
-        Subsequently, the blog page is re-rendered.
+        Each user interaction modifies the existing database tables
+        in an intended way. Subsequently, the blog page is re-rendered.
         """
 
         str_post_id = self.request.get('post')
@@ -380,7 +406,9 @@ class MainPage(Handler):
                                        " AND post_id=" + str_post_id)
 
             if like_entries.get():  # User already liked/disliked
-                self.render_front(str_user_id, str_post_id, "You already liked this post")
+                self.render_front(str_user_id,
+                                  str_post_id,
+                                  "You already liked this post")
             else:
                 blog_entry = BlogEntry.by_id(int_post_id)
                 blog_entry.likes += int(str_like)
@@ -399,7 +427,9 @@ class MainPage(Handler):
             if not str_comment:  # if comment is empty render error message
                 str_user_id = self.read_secure_cookie('user_id')
                 str_post_id = self.request.get('post_id')
-                self.render_front(str_user_id, str_post_id, "Your Comment may not be empty")
+                self.render_front(str_user_id,
+                                  str_post_id,
+                                  "Your Comment may not be empty")
             else:
                 str_user_id = self.read_secure_cookie('user_id')
                 int_user_id = int(str_user_id)
@@ -424,7 +454,9 @@ class MainPage(Handler):
             if not str_new_comment:
                 str_user_id = self.read_secure_cookie('user_id')
                 str_post_id = self.request.get('post_id')
-                self.render_front(str_user_id, str_post_id, "Your Comment may not be empty")
+                self.render_front(str_user_id,
+                                  str_post_id,
+                                  "Your Comment may not be empty")
             else:
                 # get original comment and adjust
                 comment = Comment.by_id(int(str_edit_comment))
@@ -446,12 +478,16 @@ class MainPage(Handler):
             blog_entry.delete()
 
             # delete all comments that are associated with post
-            comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id=" + str_post_id)
+            comments = db.GqlQuery("SELECT * "
+                                   "FROM Comment "
+                                   "WHERE post_id=" + str_post_id)
             for comment in comments:
                 comment.delete()
 
             # delete all likes that are associated with post
-            likes = db.GqlQuery("SELECT * FROM Like WHERE post_id=" + str_post_id)
+            likes = db.GqlQuery("SELECT * "
+                                "FROM Like "
+                                "WHERE post_id=" + str_post_id)
             for like in likes:
                 like.delete()
 
