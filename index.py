@@ -18,6 +18,9 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), aut
 
 
 class Handler(webapp2.RequestHandler):
+    """
+    Base class all other request handlers in this script inherit from
+    """
 
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -38,21 +41,37 @@ class Handler(webapp2.RequestHandler):
         )
 
     def read_secure_cookie(self, name):
+        """
+        Returns the value of a cookie only if it is valid
+        :param name: Name of Cookie
+        :return: value of cookie only if valid
+        """
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
+        """
+        Method is called when a user logs in.
+        A secure authentication cookie is set.
+        :param user: User database object
+        """
         self.set_secure_cookie('user_id', str(user.key().id()))
 
     def logout(self):
+        """
+        Method is called when a user logs out.
+        Authentication cookie is set empty.
+        """
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
 
 class BlogArticleHandler(Handler):
 
     def render_new_post(self, subject="", text="", error=""):
-
-        path = self.request.path
+        """
+        Render permalink page which is created after a new post has been created
+        """
+        path = self.request.path  # returns URL
         blog_id = path[6:]  # returns only the id part of the URL
 
         b = BlogEntry.get_by_id(int(blog_id))
@@ -70,6 +89,12 @@ class NewBlogPage(Handler):
         self.render('new_post.html', subject=subject, text=text, post_id=post_id, error=error)
 
     def get(self):
+        """
+        Get Method can be called either if user wants to create a new post or wants
+        to edit an existing post from the main blog page. In the latter case, the
+        "post" parameter exists in the request header which contains the id of the
+        blog entry which needs to be edited.
+        """
 
         # Check first if user has valid cookie. Otherwise redirect...
         str_user_id = self.read_secure_cookie('user_id')
@@ -85,6 +110,9 @@ class NewBlogPage(Handler):
                 self.render_new_post_page()
 
     def post(self):
+        """
+        Post method is called when a new post is created or an existing post is edited.
+        """
         subject = self.request.get('subject')
         text = self.request.get('text')
         str_post_id = self.request.get('post_id')  # only nonempty if post is edited
@@ -121,6 +149,11 @@ class SignUpPage(Handler):
         self.render("signup.html")
 
     def post(self):
+        """
+        Post method is called when user signs up for blog.
+        Validation functions are implemented in tools.py.
+        After successful login the user is redirected to a "welcome" page.
+        """
         username = self.request.get('username')
         password = self.request.get('password')
         verify = self.request.get('verify')
@@ -163,6 +196,14 @@ class LoginPage(Handler):
         self.render("login.html")
 
     def post(self):
+        """
+        Post method is called when user tries to login.
+        Login credentials are checked in the following way:
+            - It is checked if the username exists in the database
+            - It is checked if the the hashed password matches the password
+              hash as stored in the database
+        After successful login the user is redirected to a "welcome" page.
+        """
         username = self.request.get('username')
         password = self.request.get('password')
 
@@ -181,6 +222,10 @@ class LoginPage(Handler):
 
 class LogoutPage(Handler):
     def get(self):
+        """
+        If user navigates to this page, his authentication cookie is deleted.
+        The user is then redirected to the signup page.
+        """
         self.logout()  # Sets the user id cookie to an empty value
         self.redirect('/blog/signup')
 
@@ -205,13 +250,19 @@ class WelcomePage(Handler):
 class MyBlogPage(Handler):
 
     def render_my_blog(self, str_user_id):
-
+        """
+        Renders own blog page with only the posts that this user created
+        :param str_user_id: User id as string
+        """
         query = "SELECT * FROM BlogEntry WHERE user_id=" + str_user_id + " ORDER BY created DESC";
         blog_entries = db.GqlQuery(query)
 
         self.render('front.html', blog_entries=blog_entries, user_id=str_user_id)
 
     def get(self):
+        """
+        If user id is valid, render myblog page. Otherwise redirect to the signup page
+        """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
             self.render_my_blog(str_user_id)
@@ -219,10 +270,25 @@ class MyBlogPage(Handler):
             self.redirect('/blog/signup')
 
     def post(self):  # implementation of "delete" button
+        """
+        Post Method is called when user deletes a post. Not only the blog entry is deleted
+        but also associated comments and likes.
+        Eventually, the page is re-rendered.
+        """
         str_post_id = self.request.get('post')
         int_post_id = int(str_post_id)
         blog_entry = BlogEntry.by_id(int_post_id)
         blog_entry.delete()
+
+        # delete all comments that are associated with post
+        comments = db.GqlQuery("SELECT * FROM Comment WHERE post_id=" + str_post_id)
+        for comment in comments:
+            comment.delete()
+
+        # delete all likes that are associated with post
+        likes = db.GqlQuery("SELECT * FROM Like WHERE post_id=" + str_post_id)
+        for like in likes:
+            like.delete()
 
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
@@ -235,6 +301,13 @@ class MyBlogPage(Handler):
 class MainPage(Handler):
 
     def render_front(self, str_user_id, err_post_id="", err_msg=""):
+        """
+        Renders the main blog page
+
+        :param str_user_id: User id as string
+        :param err_post_id: post id where user interaction created an error
+        :param err_msg: error message
+        """
 
         blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
         comments = db.GqlQuery("SELECT * FROM Comment ORDER BY created DESC")
@@ -247,6 +320,12 @@ class MainPage(Handler):
                     comments=comments)
 
     def delayed_render_front(self):
+        """
+        Calls render_front if user_id is valid after waiting one second.
+        A short delay before rendering the blog is necessary if the datastore has been
+        updated because there is a short inconsistency in the tables after they are
+        updated.
+        """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
             time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
@@ -255,6 +334,9 @@ class MainPage(Handler):
             self.redirect('/blog/signup')
 
     def get(self):
+        """
+        If user id is valid, render front page. Otherwise redirect to the signup page
+        """
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
             self.render_front(str_user_id)
@@ -262,6 +344,23 @@ class MainPage(Handler):
             self.redirect('/blog/signup')
 
     def post(self):  # implementation of delete, like, comment buttons
+        """
+        Implementation of button interactions of users. The user can
+            - like/dislike a post (if user is not creator of post)
+            - comment on post (if user is not creator of post)
+            - edit a comment (if user created the comment)
+            - delete a comment (if user created the comment)
+            - delete a post (if user is not creator of post)
+
+        The function notices which type of user interaction was triggered by checking
+        if the corresponding form variable (see front.html) is not empty. For example,
+        the request parameter like is only non-empty if the user pushed the "like" or
+        "dislike" button.
+
+        Each user interaction modifies the existing database tables in an intended way.
+        Subsequently, the blog page is re-rendered.
+        """
+
         str_post_id = self.request.get('post')
         str_like_val = self.request.get('like')  # has the format 1|post_id or -1|post_id
         is_new_comment = self.request.get('is_new_comment')
@@ -319,7 +418,7 @@ class MainPage(Handler):
 
                 self.delayed_render_front()
 
-        elif str_edit_comment:
+        elif str_edit_comment:  # User edits a comment
             str_new_comment = self.request.get('comment-text')
 
             if not str_new_comment:
@@ -334,7 +433,7 @@ class MainPage(Handler):
 
                 self.delayed_render_front()
 
-        elif str_delete_comment:
+        elif str_delete_comment:  # User deletes a comment
             # get original comment and delete
             comment = Comment.by_id(int(str_delete_comment))
             comment.delete()
