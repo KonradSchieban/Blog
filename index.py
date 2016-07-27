@@ -74,7 +74,7 @@ class NewBlogPage(Handler):
         # Check first if user has valid cookie. Otherwise redirect...
         str_user_id = self.read_secure_cookie('user_id')
         if not str_user_id:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
         else:
             # Check if this an existing post is edited
             str_post_id = self.request.get('post')
@@ -139,7 +139,7 @@ class SignUpPage(Handler):
                 u.put()
 
                 self.login(u)
-                self.redirect('/welcome')
+                self.redirect('/blog/welcome')
 
 
 class LoginPage(Handler):
@@ -160,13 +160,13 @@ class LoginPage(Handler):
             self.render('login.html', username=username, error_password=error_password)
         else:
             self.login(user)  # Sets the cookie with user id
-            self.redirect('/welcome')
+            self.redirect('/blog/welcome')
 
 
 class LogoutPage(Handler):
     def get(self):
         self.logout()  # Sets the user id cookie to an empty value
-        self.redirect('/signup')
+        self.redirect('/blog/signup')
 
 
 class WelcomePage(Handler):
@@ -183,7 +183,7 @@ class WelcomePage(Handler):
             self.render("welcome.html", username=user.name)
 
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
 
 class MyBlogPage(Handler):
@@ -200,7 +200,7 @@ class MyBlogPage(Handler):
         if str_user_id:
             self.render_my_blog(str_user_id)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
     def post(self):  # implementation of "delete" button
         str_post_id = self.request.get('post')
@@ -213,7 +213,7 @@ class MyBlogPage(Handler):
             time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
             self.render_my_blog(str_user_id)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
 
 class MainPage(Handler):
@@ -235,14 +235,14 @@ class MainPage(Handler):
             time.sleep(1)  # To prevent "Eventual Inconsistency" in Datastore
             self.render_front(str_user_id)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
     def get(self):
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:
             self.render_front(str_user_id)
         else:
-            self.redirect('/signup')
+            self.redirect('/blog/signup')
 
     def post(self):  # implementation of delete, like, comment buttons
         str_post_id = self.request.get('post')
@@ -343,15 +343,14 @@ class MainPage(Handler):
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/blog', MainPage),
-    ('/myblog', MyBlogPage),
+    ('/blog/', MainPage),
+    ('/blog/myblog', MyBlogPage),
     ('/blog/NewPost', NewBlogPage),
     ('/blog/[0-9]+', BlogArticleHandler),
-    ('/signup', SignUpPage),
-    ('/welcome', WelcomePage),
-    ('/login', LoginPage),
-    ('/logout', LogoutPage)
+    ('/blog/signup', SignUpPage),
+    ('/blog/welcome', WelcomePage),
+    ('/blog/login', LoginPage),
+    ('/blog/logout', LogoutPage)
 ], debug=True)
 
 

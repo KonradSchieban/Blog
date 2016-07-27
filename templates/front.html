@@ -1,184 +1,152 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Blog</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/main.css">
-</head>
+{% extends "base.html" %}
+{% block content %}
 
-<body>
-    <div class="container">
-        <header class="row">
+    {% for blog_entry in blog_entries %}
+        <div class="row blog-username">
             <div class="col-md-12">
-                <a href="/blog"><h1>Blog</h1></a>
+                <h2>{{ blog_entry.username }}</h2>
             </div>
-        </header>
+        </div>
 
-        <nav class="navbar navbar-light bg-faded">
-            <ul class="nav navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/blog">Blog</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/myblog">My Blog</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/blog/NewPost">New Post</a>
-                </li>
-            </ul>
-        </nav>
-
-        {% for blog_entry in blog_entries %}
-            <div class="row blog-username">
-                <div class="col-md-12">
-                    <h2>{{ blog_entry.username }}</h2>
-                </div>
+        <div class="row blog-header">
+            <div class="col-md-6">
+                <h3>{{ blog_entry.subject }}</h3>
             </div>
-
-            <div class="row blog-header">
-                <div class="col-md-6">
-                    <h3>{{ blog_entry.subject }}</h3>
-                </div>
-                <div class="col-md-6">
-                    <p>{{ blog_entry.created.strftime("%Y-%m-%d %H:%M:%S") }}</p>
-                </div>
+            <div class="col-md-6 text-right">
+                <p>{{ blog_entry.created.strftime("%Y-%m-%d %H:%M:%S") }}</p>
             </div>
+        </div>
 
-            <div class="row article_separator">
-                <div class="col-md-12">
-                    <hr>
-                </div>
+        <div class="row article_separator">
+            <div class="col-md-12">
+                <hr>
             </div>
+        </div>
 
-            <div class="row blog-body">
-                <div class="col-md-12">
-                    <pre class="blog-body">{{ blog_entry.text }}</pre>
-                </div>
+        <div class="row blog-body">
+            <div class="col-md-12">
+                <pre class="blog-body">{{ blog_entry.text }}</pre>
             </div>
+        </div>
 
-            <div class="row blog-likes">
-                <div class="col-md-8 col-sm-8 btn-group">
-                    {% if user_id == blog_entry.user_id|string %}
+        <div class="row blog-likes">
+            <div class="col-md-8 col-sm-8 btn-group">
+                {% if user_id == blog_entry.user_id|string %}
 
-                    <div class="btn">
-                        <form action="/blog/NewPost" method="get">
-                            <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Delete</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit" disabled>Like</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit" disabled>Dislike</button>
-                        </form>
-                    </div>
-
-                    {% else %}
-
-                    <div class="btn">
-                        <form action="/blog/NewPost" method="get">
-                            <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Edit</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Delete</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit">Like</button>
-                        </form>
-                    </div>
-                    <div class="btn">
-                        <form method="post">
-                            <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit">Dislike</button>
-                        </form>
-                    </div>
-
-                    {% endif %}
-                </div>
-                <div class="col-md-4 col-sm-4">
-                    <p class="blog-likes text-right">Likes: {{ blog_entry.likes }}</p>
-                </div>
-            </div>
-
-            <div class="row blog-err_msg">
-                <div class="col-md-12 col-sm-12">
-                {% if err_post_id == blog_entry.key().id()|string %}
-                    {{ err_msg }}
-                {% endif %}
-                </div>
-            </div>
-
-            {% if user_id != blog_entry.user_id|string %}
-            <div class="row">
-                <div class="col-md-6 col-sm-6">
-
-                </div>
-                <div class="col-md-6 col-sm-6">
-                    <form method="post">
-                        <textarea class="form-control" style="min-width: 100%; min-height: 100px" name="comment"></textarea>
-                        <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
-                        <input type="hidden" name="is_new_comment" value="true">
-                        <button class="btn pull-right" type="submit" >Comment</button>
+                <div class="btn">
+                    <form action="/blog/NewPost" method="get">
+                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
                     </form>
                 </div>
-            </div>
-            {% endif %}
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Delete</button>
+                    </form>
+                </div>
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit" disabled>Like</button>
+                    </form>
+                </div>
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit" disabled>Dislike</button>
+                    </form>
+                </div>
 
-            {% for comment in comments %}
-                {% if comment.post_id == blog_entry.key().id() %}
-                    {% if user_id != comment.user_id|string %}
-                        <div class="row">
-                            <div class="col-md-12 col-sm-12 text-right">
-                                <h3>{{ comment.username }}, {{ comment.created.strftime("%Y-%m-%d %H:%M:%S") }}</h3>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 col-sm-4">
-                            </div>
-                            <div class="col-md-8 col-sm-8">
-                                <pre class="comment-text">{{ comment.text }}</pre>
-                            </div>
-                        </div>
-                    {% endif %}
+                {% else %}
 
-                    {% if user_id == comment.user_id|string %}
-                        <div class="row">
-                            <div class="col-md-12 col-sm-12 text-right">
-                                <h3>{{ comment.username }}, {{ comment.created.strftime("%Y-%m-%d %H:%M:%S") }}</h3>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 col-sm-4">
-                            </div>
-                            <div class="col-md-8 col-sm-8">
-                                <form method="post">
-                                    <textarea class="form-control" style="min-width: 100%;" name="comment-text">{{ comment.text }}</textarea>
-                                    <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
-                                    <button class="btn pull-right" name="edit_comment" value="{{ comment.key().id() }}" type="submit">Edit</button>
-                                    <button class="btn pull-right" name="delete_comment" value="{{ comment.key().id() }}" type="submit">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    {% endif %}
+                <div class="btn">
+                    <form action="/blog/NewPost" method="get">
+                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Edit</button>
+                    </form>
+                </div>
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Delete</button>
+                    </form>
+                </div>
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit">Like</button>
+                    </form>
+                </div>
+                <div class="btn">
+                    <form method="post">
+                        <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit">Dislike</button>
+                    </form>
+                </div>
+
                 {% endif %}
-            {% endfor %}
+            </div>
+            <div class="col-md-4 col-sm-4">
+                <p class="blog-likes text-right">Likes: {{ blog_entry.likes }}</p>
+            </div>
+        </div>
 
+        <div class="row blog-err_msg">
+            <div class="col-md-12 col-sm-12">
+            {% if err_post_id == blog_entry.key().id()|string %}
+                {{ err_msg }}
+            {% endif %}
+            </div>
+        </div>
+
+        {% if user_id != blog_entry.user_id|string %}
+        <div class="row">
+            <div class="col-md-6 col-sm-6">
+
+            </div>
+            <div class="col-md-6 col-sm-6">
+                <form method="post">
+                    <textarea class="form-control" style="min-width: 100%; min-height: 100px" name="comment"></textarea>
+                    <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
+                    <input type="hidden" name="is_new_comment" value="true">
+                    <button class="btn pull-right" type="submit" >Comment</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for comment in comments %}
+            {% if comment.post_id == blog_entry.key().id() %}
+                {% if user_id != comment.user_id|string %}
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 text-right">
+                            <h3>{{ comment.username }}, {{ comment.created.strftime("%Y-%m-%d %H:%M:%S") }}</h3>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4">
+                        </div>
+                        <div class="col-md-8 col-sm-8">
+                            <pre class="comment-text">{{ comment.text }}</pre>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if user_id == comment.user_id|string %}
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 text-right">
+                            <h3>{{ comment.username }}, {{ comment.created.strftime("%Y-%m-%d %H:%M:%S") }}</h3>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 col-sm-4">
+                        </div>
+                        <div class="col-md-8 col-sm-8">
+                            <form method="post">
+                                <textarea class="form-control" style="min-width: 100%;" name="comment-text">{{ comment.text }}</textarea>
+                                <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
+                                <button class="btn pull-right" name="edit_comment" value="{{ comment.key().id() }}" type="submit">Edit</button>
+                                <button class="btn pull-right" name="delete_comment" value="{{ comment.key().id() }}" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
         {% endfor %}
 
-    </div>
+    {% endfor %}
 
-</body>
-</html>
+{% endblock %}

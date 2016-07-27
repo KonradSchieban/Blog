@@ -1,62 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>New Blog</title>
-</head>
-<style>
+{% extends "base.html" %}
+{% block content %}
 
-    body {
-        font-family: sans-serif;
-        width: 800px;
-        margin: 0 auto;
-        padding: 10px;
-    }
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
+            <h1>New Post</h1>
+        </div>
+    </div>
 
-    textarea {
-        width: 400px;
-        height: 200px;
-        font-size: 17px;
-        font-family: monospace;
-    }
 
-    input[type=submit]{
-        font-size: 24px;
-    }
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
 
-    .error{
-        color: red;
-    }
+            <form method="post">
 
-    label {
-        display: block;
-        font-size: 20px;
-    }
+                <h4>Subject</h4>
+                <input style="min-width: 400px;" type="text" name="subject" value="{{ subject }}">
 
-    input[type=text]{
-        width: 400px;
-        font-size: 20px;
-        padding: 2px;
-    }
+                <h4>Blog</h4>
+                <textarea class="form-control" style="min-width: 80%; min-height: 400px" name="text">{{ text }}</textarea>
 
-</style>
-<body>
-    <h1>new post</h1>
-    <form method="post">
-        <label>
-            <div>subject</div>
-            <input type="text" name="subject" value="{{ subject }}">
-        </label>
+                <input type="hidden" name="post_id" value="{{ post_id }}">
 
-        <label>
-            <div>blog</div>
-            <textarea name="text">{{ text }}</textarea>
-        </label>
+                <div class="error">{{ error }}</div>
 
-        <input type="hidden" name="post_id" value="{{ post_id }}">
+                <button class="btn" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
 
-        <div class="error">{{ error }}</div>
 
-        <input type="submit">
-    </form>
-</body>
-</html>
+{% endblock %}

@@ -1,47 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My Blog</title>
-</head>
+{% extends "base.html" %}
+{% block content %}
 
-<style type="text/css">
-
-    body {
-        font-family: sans-serif;
-        width: 800px;
-        margin: 0 auto;
-        padding: 10px;
-    }
-
-    hr {
-        margin: 20px auto;
-    }
-
-    .blog + .blog{
-        margin-top: 20px;
-    }
-
-    .blog-title {
-        font-weight: bold;
-        font-size: 20px;
-    }
-
-    .blog-body {
-        font-size: 20px;
-        margin: 0;
-    }
-
-</style>
-
-<body>
-    <a href="/blog"><h1>My Blog</h1></a>
-
-    <hr>
-
-    <div class="blog">
-        <div class="blog-subject">{{ blog_entry.subject }}</div>
-        <pre class="blog-body">{{ blog_entry.text }}</pre>
+    <div class="row blog-header">
+        <div class="col-md-6">
+            <h3>{{ blog_entry.subject }}</h3>
+        </div>
+        <div class="col-md-6 text-right">
+            <p>{{ blog_entry.created.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+        </div>
     </div>
 
-</body>
-</html>
+    <div class="row article_separator">
+        <div class="col-md-12">
+            <hr>
+        </div>
+    </div>
+
+    <div class="row blog-body">
+        <div class="col-md-12">
+            <pre class="blog-body">{{ blog_entry.text }}</pre>
+        </div>
+    </div>
+
+{% endblock %}
