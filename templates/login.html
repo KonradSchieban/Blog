@@ -1,45 +1,32 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+{% block content %}
 
-<html>
-  <head>
-    <title>Login</title>
-    <style type="text/css">
-      .label {text-align: right}
-      .error {color: red}
-    </style>
-  </head>
+    <div class="row">
+        <div class="col-md-12 col-sm-12">
+            <h2>Login</h2>
+        </div>
+    </div>
 
-  <body>
-    <h2>Login</h2>
     <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="{{ username }}">
-          </td>
-          <td class="error">
-            {{ error_username }}
-          </td>
-        </tr>
+            <table class="table table-bordered table-condensed text-center" style="max-width: 600px">
+                <tbody>
+                    <tr>
+                       <td>Username</td>
+                       <td><input type="text" class="form-control" name="username" value="{{ username }}"/></td>
+                    </tr>
+                    <tr>
+                       <td>Password</td>
+                       <td><input type="password" class="form-control" name="password" value=""/></td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">
-            {{ error_password }}
-          </td>
-        </tr>
-      </table>
+            <button class="btn" type="submit">Login</button>
 
-      <input type="submit">
+            <div class="error">
+                {{ error_password }} {{ error_username }}
+            </div>
+        </div>
     </form>
-  </body>
 
-</html>
+{% endblock %}
