@@ -126,10 +126,24 @@ class SignUpPage(Handler):
         verify = self.request.get('verify')
         email = self.request.get('email')
 
-        if not password:
-            self.render('signup.html', username=username, error_password="Password is empty")
+        if not username:
+            self.render('signup.html', username=username, email=email,
+                        error_username="Username is empty")
+        elif not valid_username(username):
+            self.render('signup.html', username=username, email=email,
+                        error_username="Username does not match required specifications")
+        elif not password:
+            self.render('signup.html', username=username, email=email,
+                        error_password="Password is empty")
+        elif not valid_password(password):
+            self.render('signup.html', username=username, email=email,
+                        error_password="Password does not match required specifications")
         elif not password == verify:  # invalid user data
-            self.render('signup.html', username=username, error_password="Passwords do not match")
+            self.render('signup.html', username=username, email=email,
+                        error_password="Passwords do not match")
+        elif not valid_email(email):
+            self.render('signup.html', username=username,
+                        error_password="eMail address is not valid")
         else:  # valid user data
             # make sure the user doesn't already exist
             u = User.by_name(username)
@@ -224,6 +238,7 @@ class MainPage(Handler):
 
         blog_entries = db.GqlQuery("SELECT * FROM BlogEntry ORDER BY created DESC")
         comments = db.GqlQuery("SELECT * FROM Comment ORDER BY created DESC")
+
         self.render('front.html',
                     blog_entries=blog_entries,
                     user_id=str_user_id,
