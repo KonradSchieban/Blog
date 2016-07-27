@@ -343,6 +343,7 @@ class MainPage(Handler):
 
 
 app = webapp2.WSGIApplication([
+    ('/', MainPage),
     ('/blog', MainPage),
     ('/myblog', MyBlogPage),
     ('/blog/NewPost', NewBlogPage),

@@ -6,6 +6,8 @@ threadsafe: true
 
 # [START handlers]
 handlers:
+- url: /css
+  static_dir: css
 - url: /.*
   script: index.app
 # [END handlers]
