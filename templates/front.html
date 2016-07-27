@@ -4,16 +4,16 @@
     {% for blog_entry in blog_entries %}
         <div class="row blog-username">
             <div class="col-md-12">
-                <h2>{{ blog_entry.username }}</h2>
+                <h2>Author: {{ blog_entry.username }}</h2>
             </div>
         </div>
 
         <div class="row blog-header">
             <div class="col-md-6">
-                <h3>{{ blog_entry.subject }}</h3>
+                <h3><i>{{ blog_entry.subject }}</i></h3>
             </div>
             <div class="col-md-6 text-right">
-                <p>{{ blog_entry.created.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+                <p class="blog_created_date">{{ blog_entry.created.strftime("%Y-%m-%d %H:%M:%S") }}</p>
             </div>
         </div>
 
