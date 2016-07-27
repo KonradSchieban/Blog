@@ -73,7 +73,6 @@ To create the http listeners and deploy the content on the local machine, open a
     Blog posts can be created at https://blogks1.appspot.com/blog/NewPost. Every post needs a subject and a blog text. After creation of a new post, 
     the user is redirected to a permalink, showing the new post.
     
-<h2>5. Implementation</h2>
 
 
 
