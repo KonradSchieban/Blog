@@ -8,24 +8,23 @@
     </div>
 
     <form method="post">
-            <table class="table table-bordered table-condensed text-center" style="max-width: 600px">
-                <tbody>
-                    <tr>
-                       <td>Username</td>
-                       <td><input type="text" class="form-control" name="username" value="{{ username }}"/></td>
-                    </tr>
-                    <tr>
-                       <td>Password</td>
-                       <td><input type="password" class="form-control" name="password" value=""/></td>
-                    </tr>
-                </tbody>
-            </table>
+        <table class="table table-bordered table-condensed text-center" style="max-width: 600px">
+            <tbody>
+                <tr>
+                   <td>Username</td>
+                   <td><input type="text" class="form-control" name="username" value="{{ username }}"/></td>
+                </tr>
+                <tr>
+                   <td>Password</td>
+                   <td><input type="password" class="form-control" name="password" value=""/></td>
+                </tr>
+            </tbody>
+        </table>
 
-            <button class="btn" type="submit">Login</button>
+        <button class="btn" type="submit">Login</button>
 
-            <div class="error">
-                {{ error_password }} {{ error_username }}
-            </div>
+        <div class="error">
+            {{ error_password }} {{ error_username }}
         </div>
     </form>
 

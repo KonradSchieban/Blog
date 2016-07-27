@@ -126,7 +126,9 @@ class SignUpPage(Handler):
         verify = self.request.get('verify')
         email = self.request.get('email')
 
-        if not password == verify:  # invalid user data
+        if not password:
+            self.render('signup.html', username=username, error_password="Password is empty")
+        elif not password == verify:  # invalid user data
             self.render('signup.html', username=username, error_password="Passwords do not match")
         else:  # valid user data
             # make sure the user doesn't already exist
