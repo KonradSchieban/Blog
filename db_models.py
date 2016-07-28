@@ -32,3 +32,5 @@ class Like(db.Model):
 
     user_id = db.IntegerProperty(required=True)
     post_id = db.IntegerProperty(required=True)
+    type = db.IntegerProperty(required=True)  # 1 for Like and -1 for Dislike
+

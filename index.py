@@ -536,24 +536,41 @@ class MainPage(Handler):
         int_post_id = int(str_post_id)
 
         # check if user already liked this post
-        like_entries = db.GqlQuery("SELECT * "
-                                   "FROM Like "
-                                   "WHERE user_id=" + str_user_id +
-                                   " AND post_id=" + str_post_id)
+        like_entry = db.GqlQuery("SELECT * "
+                                 "FROM Like "
+                                 "WHERE user_id=" + str_user_id +
+                                 " AND post_id=" + str_post_id +
+                                 " AND type=" + str_like)
 
-        if like_entries.get():  # User already liked/disliked
-            return self.render_front(str_user_id,
-                                     str_post_id,
-                                     "You already liked this post")
+        if like_entry.get():  # User already liked/disliked
+            if str_like == "1":
+                return self.render_front(str_user_id,
+                                         str_post_id,
+                                         "You already liked this post")
+            else:
+                return self.render_front(str_user_id,
+                                         str_post_id,
+                                         "You already disliked this post")
         else:
+            # With opposite like type, the previous like/dislike can be neutralized
+            # -> find out if user already wants to neutralize his like
+            like_entry = db.GqlQuery("SELECT * "
+                                     "FROM Like "
+                                     "WHERE user_id=" + str_user_id +
+                                     " AND post_id=" + str_post_id +
+                                     " AND type=" + str(-int(str_like))).get()
+
+            if like_entry:  # if he already placed a like or dislike, simply delete the previous
+                like_entry.delete()
+            else:  # otherwise update Like table
+                int_user_id = int(str_user_id)
+                like = Like(post_id=int_post_id, user_id=int_user_id, type=int(str_like))
+                like.put()
+
+            # update the post with a like/dislike
             blog_entry = BlogEntry.by_id(int_post_id)
             blog_entry.likes += int(str_like)
             blog_entry.put()
-
-            # Update Like table
-            int_user_id = int(str_user_id)
-            like = Like(post_id=int_post_id, user_id=int_user_id)
-            like.put()
 
             return self.delayed_render_front(str_user_id)
 
