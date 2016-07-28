@@ -36,21 +36,25 @@
                 <div class="btn">
                     <form action="/blog/editPost" method="get">
                         <button class="btn" name="post_id" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
+                        <input type="hidden" name="actionType" value="edit">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
-                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Delete</button>
+                        <button class="btn" name="post_id" value="{{ blog_entry.key().id() }}" type="submit">Delete</button>
+                        <input type="hidden" name="actionType" value="delete">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
                         <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit" disabled>Like</button>
+                        <input type="hidden" name="actionType" value="like">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
                         <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit" disabled>Dislike</button>
+                        <input type="hidden" name="actionType" value="like">
                     </form>
                 </div>
 
@@ -58,22 +62,26 @@
 
                 <div class="btn">
                     <form action="/blog/NewPost" method="get">
-                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Edit</button>
+                        <button class="btn" name="post_id" value="{{ blog_entry.key().id() }}" type="submit" disabled>Edit</button>
+                        <input type="hidden" name="actionType" value="edit">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
-                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit" disabled>Delete</button>
+                        <button class="btn" name="post_id" value="{{ blog_entry.key().id() }}" type="submit" disabled>Delete</button>
+                        <input type="hidden" name="actionType" value="delete">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
                         <button class="btn" name="like" value="1|{{blog_entry.key().id()}}" type="submit">Like</button>
+                        <input type="hidden" name="actionType" value="like">
                     </form>
                 </div>
                 <div class="btn">
                     <form method="post">
                         <button class="btn" name="like" value="-1|{{blog_entry.key().id()}}" type="submit">Dislike</button>
+                        <input type="hidden" name="actionType" value="like">
                     </form>
                 </div>
 
@@ -101,7 +109,7 @@
                 <form method="post">
                     <textarea class="form-control" style="min-width: 100%; min-height: 100px" name="comment"></textarea>
                     <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
-                    <input type="hidden" name="is_new_comment" value="true">
+                    <input type="hidden" name="actionType" value="create_comment">
                     <button class="btn pull-right" type="submit" >Comment</button>
                 </form>
             </div>
@@ -134,12 +142,17 @@
                     <div class="row">
                         <div class="col-md-4 col-sm-4">
                         </div>
-                        <div class="col-md-8 col-sm-8">
+                        <div class="col-md-8 col-sm-8 btn-group">
                             <form method="post">
                                 <textarea class="form-control" style="min-width: 100%;" name="comment-text">{{ comment.text }}</textarea>
                                 <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
-                                <button class="btn pull-right" name="edit_comment" value="{{ comment.key().id() }}" type="submit">Edit</button>
-                                <button class="btn pull-right" name="delete_comment" value="{{ comment.key().id() }}" type="submit">Delete</button>
+                                <input type="hidden" name="actionType" value="edit_comment">
+                                <button class="btn pull-right" name="comment_id" value="{{ comment.key().id() }}" type="submit">Edit</button>
+                            </form>
+                            <form method="post">
+                                <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
+                                <input type="hidden" name="actionType" value="delete_comment">
+                                <button class="btn pull-right" name="comment_id" value="{{ comment.key().id() }}" type="submit">Delete</button>
                             </form>
                         </div>
                     </div>

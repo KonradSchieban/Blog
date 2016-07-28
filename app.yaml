@@ -8,6 +8,8 @@ threadsafe: true
 handlers:
 - url: /blog/css
   static_dir: css
+- url: /css
+  static_dir: css
 - url: /blog/js
   static_dir: js
 - url: /.*
