@@ -8,9 +8,9 @@ import webapp2
 from google.appengine.ext import db
 
 # Own Libraries
-from tools import *
-from User import *
-from db_models import *
+import tools
+import User
+from db_models import BlogEntry, Comment, Like
 
 # Initialize Jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -35,7 +35,7 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, kw))
 
     def set_secure_cookie(self, name, val):
-        cookie_val = make_secure_val(val)
+        cookie_val = tools.make_secure_val(val)
         self.response.headers.add_header(
             'set-cookie',
             '%s=%s; Path=/' % (name, cookie_val)
@@ -48,7 +48,7 @@ class Handler(webapp2.RequestHandler):
         :return: value of cookie only if valid
         """
         cookie_val = self.request.cookies.get(name)
-        return cookie_val and check_secure_val(cookie_val)
+        return cookie_val and tools.check_secure_val(cookie_val)
 
     def login(self, user):
         """
@@ -67,7 +67,7 @@ class Handler(webapp2.RequestHandler):
 
 
 class BlogArticleHandler(Handler):
-    def render_new_post(self, subject="", text="", error=""):
+    def render_new_post(self):
         """
         Render permalink page which is created after a new post
         has been created
@@ -129,7 +129,7 @@ class NewBlogPage(Handler):
             # get user object from cookie
             str_user_id = self.read_secure_cookie('user_id')
             int_user_id = int(str_user_id)
-            user = User.by_id(int_user_id)
+            user = User.User.by_id(int_user_id)
 
             if not str_post_id:  # new creation of blog post
                 a = BlogEntry(subject=subject,
@@ -171,31 +171,31 @@ class SignUpPage(Handler):
         if not username:
             self.render('signup.html', username=username, email=email,
                         error_username="Username is empty")
-        elif not valid_username(username):
+        elif not tools.valid_username(username):
             self.render('signup.html', username=username, email=email,
                         error_username="Username does not match "
                                        "required specifications")
         elif not password:
             self.render('signup.html', username=username, email=email,
                         error_password="Password is empty")
-        elif not valid_password(password):
+        elif not tools.valid_password(password):
             self.render('signup.html', username=username, email=email,
                         error_password="Password does not match "
                                        "required specifications")
         elif not password == verify:  # invalid user data
             self.render('signup.html', username=username, email=email,
                         error_password="Passwords do not match")
-        elif not valid_email(email):
+        elif not tools.valid_email(email):
             self.render('signup.html', username=username,
                         error_password="eMail address is not valid")
         else:  # valid user data
             # make sure the user doesn't already exist
-            u = User.by_name(username)
+            u = User.User.by_name(username)
             if u:
                 msg = 'That user already exists.'
                 self.render('signup.html', error_username=msg)
             else:
-                u = User.register(username, password, email)
+                u = User.User.register(username, password, email)
                 u.put()
 
                 self.login(u)
@@ -218,12 +218,12 @@ class LoginPage(Handler):
         username = self.request.get('username')
         password = self.request.get('password')
 
-        user = User.by_name(username)
+        user = User.User.by_name(username)
 
         if not user:
             error_username = "This username does not exist"
             self.render('login.html', error_username=error_username)
-        elif not valid_pw(username, password, user.pw_hash):
+        elif not User.valid_pw(username, password, user.pw_hash):
             error_password = "The password is not correct"
             self.render('login.html',
                         username=username,
@@ -252,7 +252,7 @@ class WelcomePage(Handler):
         str_user_id = self.read_secure_cookie('user_id')
         if str_user_id:  # user_id either empty or hashed user_id did not match the hash in cookie
             user_id = int(str_user_id)
-            user = User.by_id(user_id)
+            user = User.User.by_id(user_id)
             self.render("welcome.html", username=user.name)
 
         else:
@@ -434,7 +434,7 @@ class MainPage(Handler):
                 str_user_id = self.read_secure_cookie('user_id')
                 int_user_id = int(str_user_id)
 
-                user = User.by_id(int_user_id)
+                user = User.User.by_id(int_user_id)
                 str_username = user.name
 
                 str_post_id = self.request.get('post_id')
