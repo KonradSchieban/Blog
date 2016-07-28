@@ -34,8 +34,8 @@
                 {% if user_id == blog_entry.user_id|string %}
 
                 <div class="btn">
-                    <form action="/blog/NewPost" method="get">
-                        <button class="btn" name="post" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
+                    <form action="/blog/editPost" method="get">
+                        <button class="btn" name="post_id" value="{{ blog_entry.key().id() }}" type="submit">Edit</button>
                     </form>
                 </div>
                 <div class="btn">

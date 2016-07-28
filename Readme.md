@@ -70,7 +70,7 @@ To create the http listeners and deploy the content on the local machine, open a
     Users can comment on posts that a other users created but they cannot comment on their own posts. Comments can be edited or deleted.
     
 <b>4.5. Create New Posts:</b>
-    Blog posts can be created at https://blogks1.appspot.com/blog/NewPost. Every post needs a subject and a blog text. After creation of a new post, 
+    Blog posts can be created at https://blogks1.appspot.com/blog/newPost. Every post needs a subject and a blog text. After creation of a new post, 
     the user is redirected to a permalink, showing the new post.
     
 

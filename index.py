@@ -84,20 +84,16 @@ class BlogArticleHandler(Handler):
 
 
 class NewBlogPage(Handler):
-    def render_new_post_page(self, subject="", text="", post_id="", error=""):
+    def render_new_post_page(self, subject="", text="", error=""):
         self.render('new_post.html',
                     subject=subject,
                     text=text,
-                    post_id=post_id,
                     error=error)
 
     def get(self):
         """
-        Get Method can be called either if user wants to create a new
-        post or wants to edit an existing post from the main blog page.
-        In the latter case, the "post" parameter exists in the request
-        header which contains the id of the blog entry which needs to
-        be edited.
+        Get Method is called if user wants to create a new
+        post.
         """
 
         # Check first if user has valid cookie. Otherwise redirect...
@@ -105,24 +101,14 @@ class NewBlogPage(Handler):
         if not str_user_id:
             self.redirect('/blog/signup')
         else:
-            # Check if this an existing post is edited
-            str_post_id = self.request.get('post')
-            if str_post_id:  # edit
-                blog_entry = BlogEntry.get_by_id(int(str_post_id))
-                self.render_new_post_page(subject=blog_entry.subject,
-                                          text=blog_entry.text,
-                                          post_id=str_post_id)
-            else:  # new post
-                self.render_new_post_page()
+            self.render_new_post_page()
 
     def post(self):
         """
-        Post method is called when a new post is created or an
-        existing post is edited.
+        Post method is called when a new post is created
         """
         subject = self.request.get('subject')
         text = self.request.get('text')
-        str_post_id = self.request.get('post_id')  # only nonempty if post is edited
 
         if subject and text:
 
@@ -131,26 +117,76 @@ class NewBlogPage(Handler):
             int_user_id = int(str_user_id)
             user = User.User.by_id(int_user_id)
 
-            if not str_post_id:  # new creation of blog post
-                a = BlogEntry(subject=subject,
-                              text=text,
-                              user_id=int_user_id,
-                              username=user.name)
-                a.put()
+            blog_entry = BlogEntry(subject=subject,
+                                   text=text,
+                                   user_id=int_user_id,
+                                   username=user.name)
+            blog_entry.put()
 
-                # Creation of a Permalink
-                link_id = a.key().id()
-                self.redirect('/blog/' + str(link_id))
-            else:  # blog post is only updated, not created
-                int_post_id = int(str_post_id)
+            # Creation of a Permalink
+            link_id = blog_entry.key().id()
+            self.redirect('/blog/' + str(link_id))
+        else:
+            error = "We need both a subject and content"
+            self.render_new_post_page(subject, text, error)
+
+
+class EditBlogPage(Handler):
+    def render_edit_post_page(self, subject="", text="", post_id="", error=""):
+        self.render('edit_post.html',
+                    subject=subject,
+                    text=text,
+                    post_id=post_id,
+                    error=error)
+
+    def get(self):
+        """
+        Get Method is called either if user wants to edit an existing
+        post from the main blog page.
+        """
+
+        # Check first if user has valid cookie. Otherwise redirect...
+        str_user_id = self.read_secure_cookie('user_id')
+        if not str_user_id:
+            self.redirect('/blog/signup')
+        else:
+            # an existing post is edited
+            str_post_id = self.request.get('post_id')
+            blog_entry = BlogEntry.get_by_id(int(str_post_id))
+            self.render_edit_post_page(subject=blog_entry.subject,
+                                       text=blog_entry.text,
+                                       post_id=str_post_id)
+
+    def post(self):
+        """
+        Post method is called when an existing post is edited.
+        """
+
+        # Check first if user has valid cookie. Otherwise redirect...
+        str_user_id = self.read_secure_cookie('user_id')
+        if not str_user_id:
+            self.redirect('/blog/signup')
+        else:
+            subject = self.request.get('subject')
+            text = self.request.get('text')
+
+            str_post_id = self.request.get('post_id')
+            int_post_id = int(str_post_id)
+
+            if subject and text:
+
                 blog_entry = BlogEntry.by_id(int_post_id)
                 blog_entry.text = text  # update existing blog entry with edited value
                 blog_entry.subject = subject  # update existing blog entry with edited value
                 blog_entry.put()
+
                 self.redirect('/blog/' + str_post_id)
-        else:
-            error = "We need both a subject and content"
-            self.render_new_post_page(subject, text, error)
+            else:
+                error = "We need both a subject and content"
+                self.render_edit_post_page(subject=subject,
+                                           text=text,
+                                           post_id=str_post_id,
+                                           error=error)
 
 
 class SignUpPage(Handler):
@@ -497,7 +533,8 @@ class MainPage(Handler):
 app = webapp2.WSGIApplication([
     ('/blog/', MainPage),
     ('/blog/myblog', MyBlogPage),
-    ('/blog/NewPost', NewBlogPage),
+    ('/blog/newPost', NewBlogPage),
+    ('/blog/editPost', EditBlogPage),
     ('/blog/[0-9]+', BlogArticleHandler),
     ('/blog/signup', SignUpPage),
     ('/blog/welcome', WelcomePage),
