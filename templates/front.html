@@ -110,7 +110,11 @@
                     <textarea class="form-control" style="min-width: 100%; min-height: 100px" name="comment"></textarea>
                     <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
                     <input type="hidden" name="actionType" value="create_comment">
-                    <button class="btn pull-right" type="submit" >Comment</button>
+                    <div class="btn-group pull-right">
+                        <div class="btn">
+                            <button class="btn" type="submit" >Comment</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -142,7 +146,7 @@
                     <div class="row">
                         <div class="col-md-4 col-sm-4">
                         </div>
-                        <div class="col-md-8 col-sm-8 btn-group">
+                        <div class="col-md-8 col-sm-8 btn-group pull-right">
                             <form method="post">
                                 <textarea class="form-control" style="min-width: 100%;" name="comment-text">{{ comment.text }}</textarea>
                                 <input type="hidden" name="post_id" value="{{blog_entry.key().id()}}">
